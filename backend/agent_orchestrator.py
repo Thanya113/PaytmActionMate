@@ -603,10 +603,11 @@ def _build_fallback_plan(user_request: str, ctx: dict) -> dict:
     cust = ctx["customers"]
     sett = ctx["settlements"]
 
-    if any(w in req for w in ["sales", "revenue", "drop", "down", "performance"]):
+    # Check for specific campaign / drop recovery requests first
+    if any(w in req for w in ["drop", "decline", "fell", "down", "bring back", "recover sales", "boost sales", "campaign", "re-engagement", "promo"]):
         return {
-            "objective": f"Diagnose sales performance for {ctx['merchant']['name']}",
-            "understanding": f"Current week revenue is Rs.{s['total_revenue']:,.2f} ({s['vs_last_week_revenue_pct']:+.1f}% vs last week). Investigating root cause.",
+            "objective": f"Diagnose sales performance and draft recovery campaign for {ctx['merchant']['name']}",
+            "understanding": f"Current week revenue is Rs.{s['total_revenue']:,.2f} ({s['vs_last_week_revenue_pct']:+.1f}% vs last week). Investigating root cause and drafting re-engagement plan.",
             "steps": [
                 {"step_num": 1, "tool": "query_sales_metrics", "params": {"days": 7}, "description": "Fetch 7-day sales breakdown"},
                 {"step_num": 2, "tool": "segment_customers", "params": {"criteria": "inactive_14d"}, "description": "Find inactive customers"},
@@ -614,8 +615,19 @@ def _build_fallback_plan(user_request: str, ctx: dict) -> dict:
                 {"step_num": 4, "tool": "request_campaign_approval", "params": {}, "description": "Get merchant approval before dispatch"},
             ],
             "requires_approval": True,
-            "response_to_merchant": f"I see your sales are at Rs.{s['total_revenue']:,.2f} this week ({s['vs_last_week_revenue_pct']:+.1f}% vs last week). I'm analysing the root cause and will suggest a recovery plan.",
-            "insight": f"{cust['inactive_14d']} customers haven't visited in 14+ days — that's your biggest recovery opportunity.",
+            "response_to_merchant": f"I see your sales are at Rs.{s['total_revenue']:,.2f} this week ({s['vs_last_week_revenue_pct']:+.1f}% vs last week). I have analyzed the root cause and drafted a targeted recovery campaign for your approval.",
+            "insight": f"{cust['inactive_14d']} customers haven't visited in 14+ days — re-engaging them is your biggest recovery opportunity.",
+        }
+    elif any(w in req for w in ["yesterday", "today", "revenue", "sales", "how much", "transactions"]):
+        return {
+            "objective": f"Query sales and revenue metrics for {ctx['merchant']['name']}",
+            "understanding": f"Fetching sales data from the transaction ledger to answer merchant query: '{user_request}'.",
+            "steps": [
+                {"step_num": 1, "tool": "query_sales_metrics", "params": {"days": 7}, "description": "Query 7-day transaction breakdown to isolate exact revenue figures"},
+            ],
+            "requires_approval": False,
+            "response_to_merchant": f"Here is your sales breakdown: 7-day total revenue is Rs.{s['total_revenue']:,.2f} with {s['transactions']} transactions.",
+            "insight": "UPI and Soundbox continue to account for the highest share of your daily sales volume.",
         }
     elif any(w in req for w in ["customer", "churn", "inactive", "lost", "bring back"]):
         return {

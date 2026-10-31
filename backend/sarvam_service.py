@@ -21,7 +21,7 @@ class SarvamService:
         return key.strip()
 
     def get_model(self) -> str:
-        return get_setting("sarvam_model", "sarvam-105b")
+        return get_setting("sarvam_model", "sarvam-105b-conversations")
 
     def get_stt_model(self) -> str:
         return get_setting("sarvam_stt_model", "saaras:v3")
@@ -44,21 +44,25 @@ class SarvamService:
             payload = {
                 "model": model,
                 "messages": messages,
-                "temperature": temperature
+                "temperature": temperature,
+                "max_tokens": 1500
             }
             try:
                 async with httpx.AsyncClient(timeout=30.0) as client:
                     resp = await client.post(f"{SARVAM_BASE_URL}/v1/chat/completions", headers=headers, json=payload)
                     if resp.status_code == 200:
                         data = resp.json()
-                        content = data["choices"][0]["message"]["content"]
-                        return {
-                            "success": True,
-                            "content": content,
-                            "model_used": model,
-                            "provider": "Sarvam AI (Live Cloud API)",
-                            "raw_response": data
-                        }
+                        content = data["choices"][0]["message"].get("content")
+                        if content:
+                            return {
+                                "success": True,
+                                "content": content,
+                                "model_used": model,
+                                "provider": "Sarvam AI (Live Cloud API)",
+                                "raw_response": data
+                            }
+                        else:
+                            logger.warning(f"Sarvam API returned null content: {data}")
                     else:
                         logger.warning(f"Sarvam API error {resp.status_code}: {resp.text}")
             except Exception as e:

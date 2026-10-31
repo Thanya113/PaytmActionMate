@@ -452,3 +452,4 @@ export const ProactiveTeammatePanel: React.FC<ProactiveTeammatePanelProps> = ({ 
     </div>
   );
 };
+
