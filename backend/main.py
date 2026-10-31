@@ -2,6 +2,14 @@ import os
 import json
 from datetime import datetime, timezone, timedelta
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
+
+# Load .env file from project root (one directory up from backend/)
+try:
+    from dotenv import load_dotenv
+    _env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+    load_dotenv(dotenv_path=os.path.abspath(_env_path))
+except ImportError:
+    pass  # dotenv not installed — relies on OS env vars
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
@@ -11,6 +19,7 @@ from sarvam_service import SarvamService
 from agent_orchestrator import AgentOrchestrator
 from config import get_setting, set_setting
 import tools
+import usp_tools
 
 # Initialize database on startup
 init_db()
@@ -241,6 +250,34 @@ async def translate_text(req: TranslateRequest):
         source_lang=req.source_language_code or "en-IN"
     )
     return res
+
+@app.get("/api/teammate/morning-briefing")
+async def get_morning_briefing(merchant_id: str = "PAYTM-M-984214"):
+    """
+    USP Feature 1: Autonomous Morning Briefing.
+    Proactively checks merchant business health, detects issues,
+    generates Hindi Soundbox announcement audio via Sarvam Bulbul TTS.
+    """
+    briefing_data = await orchestrator.generate_morning_briefing(merchant_id)
+    return briefing_data
+
+@app.get("/api/teammate/churn-radar")
+def get_churn_radar(merchant_id: str = "PAYTM-M-984214"):
+    """
+    USP Feature 2: Predictive Customer Churn Radar.
+    Calculates churn probabilities based on Recency, Frequency, Spend.
+    Identifies high-LTV customers at risk before they lapse permanently.
+    """
+    return usp_tools.compute_churn_radar(merchant_id)
+
+@app.get("/api/teammate/fraud-watchdog")
+def get_fraud_watchdog(merchant_id: str = "PAYTM-M-984214", lookback_hours: int = 48):
+    """
+    USP Feature 3: Smart Fraud & Anomaly Watchdog.
+    Scans transaction velocity, round-amount structuring, off-hours activity,
+    and refund ratio spikes to protect the merchant from loss.
+    """
+    return usp_tools.run_fraud_watchdog(merchant_id, lookback_hours)
 
 @app.get("/api/tasks")
 def list_tasks(limit: int = 20):

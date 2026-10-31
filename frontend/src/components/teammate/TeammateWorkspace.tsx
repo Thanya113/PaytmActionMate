@@ -57,7 +57,8 @@ export const TeammateWorkspace: React.FC<TeammateWorkspaceProps> = ({
   const suggestedRequests = [
     "My sales have dropped this week. Help me bring customers back.",
     "Why is my yesterday's settlement delayed by ₹24,800?",
-    "Check failed UPI transaction of ₹850 from customer Ankit",
+    "Run predictive churn radar on my customers to identify at-risk buyers",
+    "Scan transaction logs with fraud watchdog for velocity spikes and anomalies",
     "Generate a weekend 15% cashback offer for customers inactive for 14 days"
   ];
 

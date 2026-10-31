@@ -176,5 +176,58 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to update settings');
     return res.json();
+  },
+
+  async getMorningBriefing(): Promise<{
+    briefing: {
+      health: string;
+      briefing_english: string;
+      top_actions: string[];
+      suggestion: string;
+      hindi_soundbox: string;
+      closing_line: string;
+    };
+    tts_audio_base64: string | null;
+    tts_provider: string;
+    snapshot: any;
+    generated_at: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/teammate/morning-briefing`);
+    if (!res.ok) throw new Error('Failed to fetch morning briefing');
+    return res.json();
+  },
+
+  async getChurnRadar(): Promise<{
+    computed_at: string;
+    total_customers_scored: number;
+    summary: {
+      green_count: number;
+      amber_count: number;
+      red_count: number;
+      total_at_risk_monthly_revenue: number;
+      churn_radar_insight: string;
+    };
+    high_risk_customers: any[];
+    medium_risk_customers: any[];
+    loyal_customers: any[];
+  }> {
+    const res = await fetch(`${API_BASE_URL}/teammate/churn-radar`);
+    if (!res.ok) throw new Error('Failed to fetch churn radar');
+    return res.json();
+  },
+
+  async getFraudWatchdog(): Promise<{
+    scanned_at: string;
+    total_transactions_scanned: number;
+    total_amount_scanned: number;
+    overall_risk_level: string;
+    overall_risk_score: number;
+    anomaly_count: number;
+    anomalies: any[];
+    watchdog_summary: string;
+  }> {
+    const res = await fetch(`${API_BASE_URL}/teammate/fraud-watchdog`);
+    if (!res.ok) throw new Error('Failed to fetch fraud watchdog');
+    return res.json();
   }
 };

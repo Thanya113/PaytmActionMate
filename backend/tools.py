@@ -319,6 +319,75 @@ def verify_campaign_execution(campaign_id: str) -> dict:
         "summary": "Autonomous outcome verification complete. All 5 operational health checks passed."
     }
 
+def send_soundbox_announcement(message: str = "Thank you for your payment", language: str = "hi-IN") -> dict:
+    """Broadcast a voice announcement via Paytm Soundbox device (simulated - real Soundbox uses Paytm device API)."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    now = datetime.now(timezone.utc).isoformat()
+
+    cursor.execute("SELECT id, model, location FROM soundbox_devices LIMIT 1")
+    device = cursor.fetchone()
+    device_id = device["id"] if device else "SB-DEL-9921"
+
+    cursor.execute("""
+        INSERT INTO audit_logs (task_id, action, actor, details_json, timestamp)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        "SOUNDBOX-ANNOUNCE",
+        "SOUNDBOX_BROADCAST",
+        "ActionMate_AI",
+        json.dumps({"device_id": device_id, "message": message, "language": language}),
+        now
+    ))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "device_id": device_id,
+        "message_sent": message,
+        "language": language,
+        "status": "BROADCAST_QUEUED",
+        "estimated_playback_latency_ms": 120,
+        "timestamp": now
+    }
+
+def generate_payment_link(amount: float = 0.0, customer_name: str = "Customer", description: str = "Payment") -> dict:
+    """Generate a UPI payment link and QR for a specific amount."""
+    link_id = f"PL-{uuid.uuid4().hex[:6].upper()}"
+    link_url = f"https://paytm.me/pay/{link_id}"
+    qr_payload = f"upi://pay?pa=sharmasweets@paytm&pn=Sharma%20Sweets&am={amount:.2f}&cu=INR&tn={description}"
+    now = datetime.now(timezone.utc).isoformat()
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO audit_logs (task_id, action, actor, details_json, timestamp)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        "PAYMENT-LINK-GEN",
+        "PAYMENT_LINK_GENERATED",
+        "ActionMate_AI",
+        json.dumps({"link_id": link_id, "amount": amount, "customer": customer_name}),
+        now
+    ))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "link_id": link_id,
+        "link_url": link_url,
+        "qr_payload": qr_payload,
+        "upi_link": qr_payload,
+        "amount": amount,
+        "customer_name": customer_name,
+        "description": description,
+        "status": "ACTIVE_AWAITING_PAYMENT",
+        "expires_in": "24 hours",
+        "created_at": now
+    }
+
 def investigate_settlement(batch_id: str = "ST-8821") -> dict:
     conn = get_db_connection()
     cursor = conn.cursor()

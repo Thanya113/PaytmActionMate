@@ -24,13 +24,13 @@ class SarvamService:
         return get_setting("sarvam_model", "sarvam-105b")
 
     def get_stt_model(self) -> str:
-        return get_setting("sarvam_stt_model", "saaras:v4")
+        return get_setting("sarvam_stt_model", "saaras:v3")
 
     def get_tts_model(self) -> str:
-        return get_setting("sarvam_tts_model", "bulbul:v4-flash")
+        return get_setting("sarvam_tts_model", "bulbul:v3")
 
     def get_tts_speaker(self) -> str:
-        return get_setting("tts_speaker", "meera")
+        return get_setting("tts_speaker", "ritu")
 
     async def chat_completion(self, messages: list, temperature: float = 0.2) -> dict:
         api_key = self.get_api_key()

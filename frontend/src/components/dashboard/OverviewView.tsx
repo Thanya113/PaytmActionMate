@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { OverviewResponse } from '../../services/api';
 import { NavigationTab, DailySale } from '../../types';
+import { ProactiveTeammatePanel } from './ProactiveTeammatePanel';
 
 interface OverviewViewProps {
   data: OverviewResponse | null;
@@ -172,6 +173,9 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Proactive AI Teammate Operations (USP: Morning Briefing + Churn Radar + Fraud Watchdog) */}
+      <ProactiveTeammatePanel onTriggerPrompt={onTriggerPrompt} />
 
       {/* C. Business Performance & Visual Comparison Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
